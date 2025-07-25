@@ -6,6 +6,7 @@ __version__ = "1.0"
 
 import requests
 from pyquery import PyQuery
+import unicodedata
 
 
 def _get_ch2en(name):
@@ -24,7 +25,14 @@ def _get_ch2en(name):
             # print(result)  # Output: wang hsiao ming
     return result
 
-
+def _clean_wade_giles(name):
+    # Lowercase for consistency
+    name = name.lower()
+    
+    # Normalize accented characters (e.g., ü → u)
+    name = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("utf-8")
+    
+    return name
 
 def ch2en(name, encode="威妥瑪拼音"):
     if len(name) == 0:
@@ -34,5 +42,6 @@ def ch2en(name, encode="威妥瑪拼音"):
         raise ValueError("Not supported yet.")
     
     enName = _get_ch2en(name)
+    enName = _clean_wade_giles(enName)
 
     return enName
