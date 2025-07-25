@@ -70,7 +70,7 @@ if __name__ == '__main__':
         reporterDICT = json.load(reporterFile)
 
     tmpSTR = byLine_enditem_insert(inputSTR)
-    tmpSTR = reporter_name_insert(tmpSTR)
+    # tmpSTR = reporter_name_insert(tmpSTR)
     tmpSTR = twd2usd(tmpSTR)
     print(tmpSTR)
 
