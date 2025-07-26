@@ -179,12 +179,14 @@ class BotClient(discord.Client):
             elif self.mscDICT[message.author.id]["latestQuest"] == "initial_quest" and self.mscDICT[message.author.id]["reporterList"] == []:
                 self.mscDICT[message.author.id]["reporterList"] = msgSTR.split(' ')
                 tmpSTR = byLine_enditem_insert(self.mscDICT[message.author.id]["tmpSTR"])
-                if len(self.mscDICT[message.author.id]["reporterList"]) > 1:
+                if len(self.mscDICT[message.author.id]["reporterList"]) > 0:
                     tmpSTR = reporter_name_insert(tmpSTR, self.mscDICT[message.author.id]["reporterList"])
                     tmpSTR = twd2usd(tmpSTR)
                     self.mscDICT[message.author.id]["tmpSTR"] = tmpSTR
                     print(tmpSTR)
                     replySTR = tmpSTR
+                self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
+                
 
             else:
                 replySTR = "好像不太對喔！請重新輸入每位記者的中文姓名，並以空格分隔！"
