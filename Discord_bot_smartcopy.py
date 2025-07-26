@@ -16,6 +16,8 @@ from tw2us import twd2usd
 
 # Load environment variables from .env file
 load_dotenv()
+discord_token = os.getenv("discord_token")
+my_name = os.getenv('my_name')
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -43,7 +45,29 @@ def byLine_enditem_insert(inputSTR):
 
     return inputSTR
 
+def reporter_name_insert(inputSTR, reporterLIST=None):
+    authorSTR = my_name
 
+    if len(reporterLIST) > 1:
+        tmpSTR = ''
+        for reporter in reporterLIST:
+            if reporter != reporterLIST[-1]:
+                tmpSTR += f'{reporter}, '
+            else:
+                tmpSTR += f'{reporter} and {authorSTR}'
+
+        inputSTR = inputSTR.replace('Name1', tmpSTR)
+
+    else:
+        inputSTR = inputSTR.replace('Name1', f'{reporterLIST[0]} and {authorSTR}')
+
+    for reporter in reporterLIST:
+        if reporter in reporterDICT.keys():
+            inputSTR = inputSTR.replace(reporter, reporterDICT[reporter])
+        else:
+            pass
+
+    return inputSTR
 
 class BotClient(discord.Client):
 
@@ -54,7 +78,9 @@ class BotClient(discord.Client):
         templateDICT = {    "id": messageAuthorID,
                              "updatetime" : datetime.now(),
                              "latestQuest": "",
-                             "false_count" : 0
+                             "false_count" : 0,
+                             "reporterList" : [],
+                             "tmpSTR" : ""
         }
         return templateDICT
 
@@ -67,6 +93,7 @@ class BotClient(discord.Client):
         }
         # ####################################################################################
         print('Logged on as {} with id {}'.format(self.user, self.user.id))
+
 
     async def on_message(self, message):
         # Don't respond to bot itself. Or it would create a non-stop loop.
@@ -120,7 +147,6 @@ class BotClient(discord.Client):
                 # logging.debug("######\nLoki 處理結果如下：")
                 # logging.debug(resultDICT)
 
-                replySTR = "抱歉，我的資料庫裡沒有相關的知識！"  # 預設回覆
                 # if resultDICT["response"] != [] and resultDICT["source"] != ["LLM_reply"]:
                 #     replySTR = resultDICT["response"][0]
                 # else:
@@ -137,13 +163,31 @@ class BotClient(discord.Client):
                 #     userSTR = msgSTR
                 #     #askLLM(system="", assistant="", user="")
                 #     replySTR = askLLM(assistant=assistantSTR, user=userSTR)
+                
+            # 更新對話紀錄
+            if message.author.id not in self.mscDICT.keys():
+                self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
+                self.mscDICT[message.author.id]["updatetime"] = datetime.now()
 
-                tmpSTR = byLine_enditem_insert(msgSTR)
-                # tmpSTR = reporter_name_insert(tmpSTR)
-                tmpSTR = twd2usd(tmpSTR)
-                print(tmpSTR)
+            # step 0
+            if self.mscDICT[message.author.id]["reporterList"] == [] and self.mscDICT[message.author.id]["latestQuest"] == "":
+                replySTR = "請輸入每位記者的中文姓名，並以空格分隔！"
+                self.mscDICT[message.author.id]["tmpSTR"] = msgSTR
+                self.mscDICT[message.author.id]["latestQuest"] = "initial_quest"
 
-                replySTR = tmpSTR
+            # step 1 and beyond
+            elif self.mscDICT[message.author.id]["latestQuest"] == "initial_quest" and self.mscDICT[message.author.id]["reporterList"] == []:
+                self.mscDICT[message.author.id]["reporterList"] = msgSTR.split(' ')
+                tmpSTR = byLine_enditem_insert(self.mscDICT[message.author.id]["tmpSTR"])
+                if len(self.mscDICT[message.author.id]["reporterList"]) > 1:
+                    tmpSTR = reporter_name_insert(tmpSTR, self.mscDICT[message.author.id]["reporterList"])
+                    tmpSTR = twd2usd(tmpSTR)
+                    self.mscDICT[message.author.id]["tmpSTR"] = tmpSTR
+                    print(tmpSTR)
+                    replySTR = tmpSTR
+
+            else:
+                replySTR = "好像不太對喔！請重新輸入每位記者的中文姓名，並以空格分隔！"
 
             await message.reply(replySTR)
 
@@ -151,6 +195,7 @@ class BotClient(discord.Client):
 if __name__ == "__main__":
     # with open("account.info", encoding="utf-8") as f: #讀取account.info
     #     accountDICT = json.loads(f.read())
-    discord_token = os.getenv("discord_token")
     client = BotClient(intents=discord.Intents.default())
-    client.run(str(discord_token))
+    client.run(discord_token)
+
+    
