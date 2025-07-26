@@ -4,13 +4,20 @@
 import logging
 import discord
 import json
+import name2WG
+import os
 import re
 from datetime import datetime
+from dotenv import load_dotenv
 from pprint import pprint
+from tw2us import twd2usd
 
 #from <your_loki_main_program>.main import askLoki, askLLM, getSimilarity, simLoki, ARTICUT
 
+# Load environment variables from .env file
+load_dotenv()
 
+# Set up logging
 logging.basicConfig(level=logging.DEBUG)
 
 # def getLokiResult(inputSTR, filterLIST=[]):
@@ -22,6 +29,21 @@ logging.basicConfig(level=logging.DEBUG)
 #     resultDICT = askLoki(inputSTR, filterLIST=filterLIST, splitLIST=splitLIST, refDICT=refDICT)
 #     logging.debug("Loki Result => {}".format(resultDICT))
 #     return resultDICT
+
+# open reporter_names.json
+with open('reporter_names.json', 'r', encoding='utf-8') as reporterFile:
+    reporterDICT = json.load(reporterFile)
+
+def byLine_enditem_insert(inputSTR):
+    if re.search(r'\(By',inputSTR) == None:
+        inputSTR += '\n\n(By Name1)'
+
+    if re.search(r'Enditem/', inputSTR) == None:
+        inputSTR += '\nEnditem/\n'
+
+    return inputSTR
+
+
 
 class BotClient(discord.Client):
 
@@ -116,11 +138,19 @@ class BotClient(discord.Client):
                 #     #askLLM(system="", assistant="", user="")
                 #     replySTR = askLLM(assistant=assistantSTR, user=userSTR)
 
+                tmpSTR = byLine_enditem_insert(msgSTR)
+                # tmpSTR = reporter_name_insert(tmpSTR)
+                tmpSTR = twd2usd(tmpSTR)
+                print(tmpSTR)
+
+                replySTR = tmpSTR
+
             await message.reply(replySTR)
 
 
 if __name__ == "__main__":
-    with open("account.info", encoding="utf-8") as f: #讀取account.info
-        accountDICT = json.loads(f.read())
+    # with open("account.info", encoding="utf-8") as f: #讀取account.info
+    #     accountDICT = json.loads(f.read())
+    discord_token = os.getenv("discord_token")
     client = BotClient(intents=discord.Intents.default())
-    client.run(accountDICT["discord_token"])
+    client.run(str(discord_token))
