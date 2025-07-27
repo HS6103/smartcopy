@@ -1,6 +1,7 @@
 #!/user/bin/env python
 # -*- coding: utf-8 -*-
 
+import asyncio
 import logging
 import discord
 import json
@@ -129,115 +130,88 @@ class BotClient(discord.Client):
 
 
     async def on_message(self, message):
-        # Don't respond to bot itself. Or it would create a non-stop loop.
-        # 如果訊息來自 bot 自己，就不要處理，直接回覆 None。不然會 Bot 會自問自答個不停。
         if message.author == self.user:
-            return None
+            return
 
-        logging.debug("收到來自 {} 的訊息".format(message.author))
-        logging.debug("訊息內容是 {}。".format(message.content))
         if self.user.mentioned_in(message):
-            replySTR = "我是預設的回應字串…你會看到我這串字，肯定是出了什麼錯！"
-            logging.debug("本 bot 被叫到了！")
-            msgSTR = message.content.replace("<@{}> ".format(self.user.id), "").strip()
-            logging.debug("人類說：{}".format(msgSTR))
-            if msgSTR == "ping":
-                replySTR = "pong"
-            elif msgSTR == "ping ping":
-                replySTR = "pong pong"
+            msgSTR = message.content.replace(f"<@{self.user.id}>", "").strip()
 
-# ##########初次對話：這裡是 keyword trigger 的。
-            elif msgSTR.lower() in ["哈囉","嗨","你好","您好","hi","hello"]:
-                #有講過話(判斷對話時間差)
-                if message.author.id in self.mscDICT.keys():
+            # Quick replies
+            if msgSTR.lower() == "ping":
+                await self.safe_reply(message, "pong")
+                return
+            elif msgSTR.lower() == "ping ping":
+                await self.safe_reply(message, "pong pong")
+                return
+            elif msgSTR.lower() in ["哈囉", "嗨", "你好", "您好", "hi", "hello"]:
+                # Session check
+                if message.author.id in self.mscDICT:
                     timeDIFF = datetime.now() - self.mscDICT[message.author.id]["updatetime"]
-                    #有講過話，但與上次差超過 5 分鐘(視為沒有講過話，刷新template)
                     if timeDIFF.total_seconds() >= 300:
                         self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
-                        replySTR = "嗨嗨，我們好像見過面，但卓騰的隱私政策不允許我記得你的資料，抱歉！"
-                    #有講過話，而且還沒超過5分鐘就又跟我 hello (就繼續上次的對話)
+                        await self.safe_reply(message, "嗨嗨，我們好像見過面，但卓騰的隱私政策不允許我記得你的資料，抱歉！")
                     else:
-                        replySTR = self.mscDICT[message.author.id]["latestQuest"]
-                #沒有講過話(給他一個新的template)
+                        await self.safe_reply(message, self.mscDICT[message.author.id]["latestQuest"])
                 else:
                     self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
-                    replySTR = msgSTR.title()
+                    await self.safe_reply(message, msgSTR.title())
+                return
 
-# ##########非初次對話：這裡用 Loki 計算語意
-            else: #開始處理正式對話
-                #從這裡開始接上 NLU 模型
+            # Run long OpenAI/Loki task in background
+            asyncio.create_task(self.handle_semantic_reply(message, msgSTR))
 
-                """
-                bot 處理過程參考 (以下項目根據專案可互相配合或調換順序)
-                ● Loki 語意分析 (askLoki)，結果最為嚴謹，可視為第一處理項目
-                ● Similarity 相似度比對 (simLoki)，計算 Loki 模型中的訓練句型相似度，門檻值為 account.info 中的 utterance_threshold
-                ● ContentWord 脈絡模糊比對 (ARTICUT.getContentWordLIST)，將脈絡作為關鍵字查詢出相關的資料
-                ● LLM 生成模型 (askLLM)，除了 msgSTR 外，建議將相關的資料一併附上，以獲得更精確的結果
-                """
-                # Loki 語意分析
-                #askLoki(content, **kwargs)
-                # # resultDICT = askLoki(msgSTR)
-                # logging.debug("######\nLoki 處理結果如下：")
-                # logging.debug(resultDICT)
+    async def handle_semantic_reply(self, message, msgSTR):
+        # Step 1: Send a quick processing message
+        await message.reply("正在處理中，請稍候...")
 
-                # if resultDICT["response"] != [] and resultDICT["source"] != ["LLM_reply"]:
-                #     replySTR = resultDICT["response"][0]
-                # else:
-                #     """
-                #     # Similarity 相似度比對
-                #     simDICT = simLoki(msgSTR)
-                #     # ContentWord 脈絡模糊比對
-                #     atkDICT = ARTICUT.parse(msgSTR)
-                #     contentWordLIST = ARTICUT.getContentWordLIST(atkDICT)
-                #     # LLM 生成模型
-                #     responseSTR = askLLM(system, assistant, user)
-                #     """
-                #     assistantSTR = "！"
-                #     userSTR = msgSTR
-                #     #askLLM(system="", assistant="", user="")
-                #     replySTR = askLLM(assistant=assistantSTR, user=userSTR)
-            try:    
-                # 更新對話紀錄
-                if message.author.id not in self.mscDICT.keys():
-                    self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
-                    self.mscDICT[message.author.id]["updatetime"] = datetime.now()
+        replySTR = "（預設錯誤訊息）"
 
-                # step 0 (input: 中文故事全文)
-                if self.mscDICT[message.author.id]["reporterList"] == [] and self.mscDICT[message.author.id]["latestQuest"] == "":
-                    replySTR = "請貼給我英文 news lead！"
-                    self.mscDICT[message.author.id]["latestQuest"] = "initial_quest"
-                    self.mscDICT[message.author.id]["tmpSTR"] = msgSTR
+        try:
+            if message.author.id not in self.mscDICT:
+                self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
 
-                # step 1 (input: 英文 lead)
-                elif self.mscDICT[message.author.id]["latestQuest"] == "initial_quest":
-                    english_lead = msgSTR.strip()
-                    chinese_article = self.mscDICT[message.author.id]["tmpSTR"]
-                    draft_story = process_news_story(chinese_article, english_lead)
+            self.mscDICT[message.author.id]["updatetime"] = datetime.now()
 
-                    if draft_story.startswith(english_lead) == False:
-                        draft_story = english_lead + "\n\n" + draft_story
+            if self.mscDICT[message.author.id]["reporterList"] == [] and self.mscDICT[message.author.id]["latestQuest"] == "":
+                replySTR = "請貼給我英文 news lead！"
+                self.mscDICT[message.author.id]["latestQuest"] = "initial_quest"
+                self.mscDICT[message.author.id]["tmpSTR"] = msgSTR
 
-                    self.mscDICT[message.author.id]["latestQuest"] = "draft_story"
-                    self.mscDICT[message.author.id]["resultSTR"] = draft_story
-                    resultSTR = byLine_enditem_insert(self.mscDICT[message.author.id]["resultSTR"])
-                    loki_result = askLoki(self.mscDICT[message.author.id]["tmpSTR"],refDICT={"name": [], "location": [], "date": []})  # 拿中文文章 tmpSTR 給 loki 處理
-                    if loki_result and loki_result["name"] != []:
-                        self.mscDICT[message.author.id]["reporterList"] = loki_result["name"]
-                    if len(self.mscDICT[message.author.id]["reporterList"]) > 0:
-                        resultSTR = reporter_name_insert(resultSTR, self.mscDICT[message.author.id]["reporterList"])
-                        self.mscDICT[message.author.id]["resultSTR"] = resultSTR
-                        resultSTR = twd2usd(resultSTR)
-                        self.mscDICT[message.author.id]["resultSTR"] = resultSTR
-                        print(resultSTR)
-                        replySTR = resultSTR
-                    self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
-                
+            elif self.mscDICT[message.author.id]["latestQuest"] == "initial_quest":
+                english_lead = msgSTR.strip()
+                chinese_article = self.mscDICT[message.author.id]["tmpSTR"]
+                draft_story = process_news_story(chinese_article, english_lead)
 
-            except Exception as e:
-                replySTR = "Something went wrong. Please try again." + str(e)
-                logging.error("Error processing message: {}".format(e.with_traceback()))
+                if not draft_story.startswith(english_lead):
+                    draft_story = english_lead + "\n\n" + draft_story
 
+                self.mscDICT[message.author.id]["latestQuest"] = "draft_story"
+                self.mscDICT[message.author.id]["resultSTR"] = draft_story
+
+                resultSTR = byLine_enditem_insert(draft_story)
+                loki_result = askLoki(
+                    self.mscDICT[message.author.id]["tmpSTR"],
+                    refDICT={"name": [], "location": [], "date": []}
+                )
+
+                if loki_result and loki_result["name"]:
+                    self.mscDICT[message.author.id]["reporterList"] = loki_result["name"]
+
+                if self.mscDICT[message.author.id]["reporterList"]:
+                    resultSTR = reporter_name_insert(resultSTR, self.mscDICT[message.author.id]["reporterList"])
+                    resultSTR = twd2usd(resultSTR)
+                    self.mscDICT[message.author.id]["resultSTR"] = resultSTR
+                    replySTR = resultSTR
+
+                self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
+
+        except Exception as e:
+            replySTR = f"Something went wrong. Please try again.\n{e}"
+            logging.error("Error in semantic reply: %s", e, exc_info=True)
+
+        # Step 2: Send the final reply as a new message (or multiple if needed)
         await self.safe_reply(message, replySTR)
+
 
 
 if __name__ == "__main__":
