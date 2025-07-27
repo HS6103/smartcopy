@@ -164,8 +164,6 @@ class BotClient(discord.Client):
         # Step 1: Send a quick processing message
         await message.reply("正在處理中，請稍候...")
 
-        replySTR = "（預設錯誤訊息）"
-
         try:
             if message.author.id not in self.mscDICT:
                 self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
