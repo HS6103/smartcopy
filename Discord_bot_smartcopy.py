@@ -4,6 +4,7 @@
 import logging
 import discord
 import json
+from gpt_writer import process_news_story
 import name2WG
 import os
 import re
@@ -32,9 +33,6 @@ logging.basicConfig(level=logging.DEBUG)
 #     logging.debug("Loki Result => {}".format(resultDICT))
 #     return resultDICT
 
-# open reporter_names.json
-with open('reporter_names.json', 'r', encoding='utf-8') as reporterFile:
-    reporterDICT = json.load(reporterFile)
 
 def byLine_enditem_insert(inputSTR):
     if re.search(r'\(By',inputSTR) == None:
@@ -46,6 +44,10 @@ def byLine_enditem_insert(inputSTR):
     return inputSTR
 
 def reporter_name_insert(inputSTR, reporterLIST=None):
+    # open reporter_names.json
+    with open('reporter_names.json', 'r', encoding='utf-8') as reporterFile:
+        reporterDICT = json.load(reporterFile)
+
     authorSTR = my_name
 
     if len(reporterLIST) > 1:
@@ -169,14 +171,23 @@ class BotClient(discord.Client):
                 self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
                 self.mscDICT[message.author.id]["updatetime"] = datetime.now()
 
-            # step 0
+            # step 0 (input: 中文故事全文)
             if self.mscDICT[message.author.id]["reporterList"] == [] and self.mscDICT[message.author.id]["latestQuest"] == "":
-                replySTR = "請輸入每位記者的中文姓名，並以空格分隔！"
-                self.mscDICT[message.author.id]["tmpSTR"] = msgSTR
+                replySTR = "請貼給我英文 news lead！"
                 self.mscDICT[message.author.id]["latestQuest"] = "initial_quest"
+                self.mscDICT[message.author.id]["tmpSTR"] = msgSTR
 
-            # step 1 and beyond
-            elif self.mscDICT[message.author.id]["latestQuest"] == "initial_quest" and self.mscDICT[message.author.id]["reporterList"] == []:
+            # step 1 (input: 英文 lead)
+            elif self.mscDICT[message.author.id]["latestQuest"] == "initial_quest":
+                english_lead = msgSTR.strip()
+                chinese_article = self.mscDICT[message.author.id]["tmpSTR"]
+                draft_story = process_news_story(chinese_article, english_lead)
+                self.mscDICT[message.author.id]["latestQuest"] = "draft_story"
+                self.mscDICT[message.author.id]["tmpSTR"] = draft_story
+                replySTR = "草稿故事已生成：\n\n" + draft_story + "\n\n請輸入每位記者的中文姓名，並以空格分隔！"
+
+            # step 2 and beyond
+            elif self.mscDICT[message.author.id]["latestQuest"] == "draft_story" and self.mscDICT[message.author.id]["reporterList"] == []:
                 self.mscDICT[message.author.id]["reporterList"] = msgSTR.split(' ')
                 tmpSTR = byLine_enditem_insert(self.mscDICT[message.author.id]["tmpSTR"])
                 if len(self.mscDICT[message.author.id]["reporterList"]) > 0:
