@@ -26,10 +26,10 @@ def _summarize_to_ap_style(original_text, lead, word_limit=300):
     """Summarizes text to AP style news story with given lead and word limit."""
     prompt = (
         f"{original_text}\n\n"
-        f"Task: based on above report, finish the story after the given English lead, Constraint: [AP style, reverse pyramid structure], Word limit: {word_limit}, English lead:\n\n{lead}"
+        f"Task: based on above report, finish the story after the given English lead, return story with given lead, Constraint: [AP style, reverse pyramid structure], Word limit: {word_limit}, English lead:\n\n{lead}"
     )
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4",
         messages=[
             {"role": "system", "content": "You are an expert AP-style news writer, using concise, straight-forward plain English."},
             {"role": "user", "content": prompt}

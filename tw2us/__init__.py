@@ -11,7 +11,12 @@ soup = BeautifulSoup(res.text, "html.parser")
 def twd2usd(inputSTR):
     """Convert TWD to USD using the exchange rate."""
     search_result = re.search(r'((NT\$[0-9\.,]+) (cents|million|billion|trillion){0,1})', inputSTR)
-    twdSTR = search_result.groups(0)[0]
+
+    if search_result is None:
+        print("**No TWD amount found in the input string.**\n")
+        return inputSTR
+    else:
+        twdSTR = search_result.groups(0)[0]
     # print(twdSTR)
 
     if twdSTR:
@@ -36,7 +41,6 @@ def twd2usd(inputSTR):
         usdSTR = "{:,}".format(usd_value)
         inputSTR = inputSTR.replace(f'{twdSTR}', f'{twdSTR} (US${usdSTR}) ', 1)
 
-        
     return inputSTR
 
 

@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from pprint import pprint
 from tw2us import twd2usd
 
-#from <your_loki_main_program>.main import askLoki, askLLM, getSimilarity, simLoki, ARTICUT
+from smartcopy_TW.main import askLoki, ARTICUT
 
 # Load environment variables from .env file
 load_dotenv()
@@ -82,7 +82,8 @@ class BotClient(discord.Client):
                              "latestQuest": "",
                              "false_count" : 0,
                              "reporterList" : [],
-                             "tmpSTR" : ""
+                             "tmpSTR" : "",
+                             "resultSTR" : ""
         }
         return templateDICT
 
@@ -95,6 +96,36 @@ class BotClient(discord.Client):
         }
         # ####################################################################################
         print('Logged on as {} with id {}'.format(self.user, self.user.id))
+
+    async def safe_reply(self, message, content):
+        """Safely send a reply without exceeding Discord's 2000 character limit, splitting at paragraph breaks (\n\n)."""
+        MAX_LENGTH = 2000
+
+        paragraphs = content.split("\n\n")
+        parts = []
+        current = ""
+
+        for para in paragraphs:
+            if len(current) + len(para) + 2 <= MAX_LENGTH:  # +2 accounts for the \n\n added back
+                current += para + "\n\n"
+            else:
+                if current:
+                    parts.append(current.strip())
+                if len(para) + 2 > MAX_LENGTH:
+                    # Break oversized paragraph into safe chunks
+                    for i in range(0, len(para), MAX_LENGTH):
+                        parts.append(para[i:i+MAX_LENGTH].strip())
+                    current = ""
+                else:
+                    current = para + "\n\n"
+
+        if current:
+            parts.append(current.strip())
+
+        # Send all parts
+        await message.reply(parts[0])
+        for part in parts[1:]:
+            await message.channel.send(part)
 
 
     async def on_message(self, message):
@@ -165,44 +196,48 @@ class BotClient(discord.Client):
                 #     userSTR = msgSTR
                 #     #askLLM(system="", assistant="", user="")
                 #     replySTR = askLLM(assistant=assistantSTR, user=userSTR)
+            try:    
+                # 更新對話紀錄
+                if message.author.id not in self.mscDICT.keys():
+                    self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
+                    self.mscDICT[message.author.id]["updatetime"] = datetime.now()
+
+                # step 0 (input: 中文故事全文)
+                if self.mscDICT[message.author.id]["reporterList"] == [] and self.mscDICT[message.author.id]["latestQuest"] == "":
+                    replySTR = "請貼給我英文 news lead！"
+                    self.mscDICT[message.author.id]["latestQuest"] = "initial_quest"
+                    self.mscDICT[message.author.id]["tmpSTR"] = msgSTR
+
+                # step 1 (input: 英文 lead)
+                elif self.mscDICT[message.author.id]["latestQuest"] == "initial_quest":
+                    english_lead = msgSTR.strip()
+                    chinese_article = self.mscDICT[message.author.id]["tmpSTR"]
+                    draft_story = process_news_story(chinese_article, english_lead)
+
+                    if draft_story.startswith(english_lead) == False:
+                        draft_story = english_lead + "\n\n" + draft_story
+
+                    self.mscDICT[message.author.id]["latestQuest"] = "draft_story"
+                    self.mscDICT[message.author.id]["resultSTR"] = draft_story
+                    resultSTR = byLine_enditem_insert(self.mscDICT[message.author.id]["resultSTR"])
+                    loki_result = askLoki(self.mscDICT[message.author.id]["tmpSTR"],refDICT={"name": [], "location": [], "date": []})  # 拿中文文章 tmpSTR 給 loki 處理
+                    if loki_result and loki_result["name"] != []:
+                        self.mscDICT[message.author.id]["reporterList"] = loki_result["name"]
+                    if len(self.mscDICT[message.author.id]["reporterList"]) > 0:
+                        resultSTR = reporter_name_insert(resultSTR, self.mscDICT[message.author.id]["reporterList"])
+                        self.mscDICT[message.author.id]["resultSTR"] = resultSTR
+                        resultSTR = twd2usd(resultSTR)
+                        self.mscDICT[message.author.id]["resultSTR"] = resultSTR
+                        print(resultSTR)
+                        replySTR = resultSTR
+                    self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
                 
-            # 更新對話紀錄
-            if message.author.id not in self.mscDICT.keys():
-                self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
-                self.mscDICT[message.author.id]["updatetime"] = datetime.now()
 
-            # step 0 (input: 中文故事全文)
-            if self.mscDICT[message.author.id]["reporterList"] == [] and self.mscDICT[message.author.id]["latestQuest"] == "":
-                replySTR = "請貼給我英文 news lead！"
-                self.mscDICT[message.author.id]["latestQuest"] = "initial_quest"
-                self.mscDICT[message.author.id]["tmpSTR"] = msgSTR
+            except Exception as e:
+                replySTR = "Something went wrong. Please try again." + str(e)
+                logging.error("Error processing message: {}".format(e.with_traceback()))
 
-            # step 1 (input: 英文 lead)
-            elif self.mscDICT[message.author.id]["latestQuest"] == "initial_quest":
-                english_lead = msgSTR.strip()
-                chinese_article = self.mscDICT[message.author.id]["tmpSTR"]
-                draft_story = process_news_story(chinese_article, english_lead)
-                self.mscDICT[message.author.id]["latestQuest"] = "draft_story"
-                self.mscDICT[message.author.id]["tmpSTR"] = draft_story
-                replySTR = "草稿故事已生成：\n\n" + draft_story + "\n\n請輸入每位記者的中文姓名，並以空格分隔！"
-
-            # step 2 and beyond
-            elif self.mscDICT[message.author.id]["latestQuest"] == "draft_story" and self.mscDICT[message.author.id]["reporterList"] == []:
-                self.mscDICT[message.author.id]["reporterList"] = msgSTR.split(' ')
-                tmpSTR = byLine_enditem_insert(self.mscDICT[message.author.id]["tmpSTR"])
-                if len(self.mscDICT[message.author.id]["reporterList"]) > 0:
-                    tmpSTR = reporter_name_insert(tmpSTR, self.mscDICT[message.author.id]["reporterList"])
-                    tmpSTR = twd2usd(tmpSTR)
-                    self.mscDICT[message.author.id]["tmpSTR"] = tmpSTR
-                    print(tmpSTR)
-                    replySTR = tmpSTR
-                self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
-                
-
-            else:
-                replySTR = "好像不太對喔！請重新輸入每位記者的中文姓名，並以空格分隔！"
-
-            await message.reply(replySTR)
+        await self.safe_reply(message, replySTR)
 
 
 if __name__ == "__main__":
