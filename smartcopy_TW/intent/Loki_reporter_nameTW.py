@@ -21,6 +21,7 @@ from importlib.util import spec_from_file_location
 from random import sample
 import json
 import os
+import re
 
 INTENT_NAME = "reporter_nameTW"
 CWD_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -95,7 +96,7 @@ def getResult(inputSTR, utterance, args, resultDICT, refDICT, pattern="", toolki
                 resultDICT["response"] = replySTR
                 resultDICT["source"] = "reply"
         else:
-            resultDICT["name"].append(args[0])
+            resultDICT["name"] = (re.findall(r"<ENTITY_person>([^<]+)</ENTITY_person>", args[0]))
             resultDICT["location"].append(args[1])
             resultDICT["date"].append(args[2])
 

@@ -19,7 +19,7 @@ from smartcopy_TW.main import askLoki, ARTICUT
 # Load environment variables from .env file
 load_dotenv()
 discord_token = os.getenv("discord_token")
-my_name = os.getenv('my_name')
+my_name = os.getenv("my_name")
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -37,21 +37,24 @@ logging.basicConfig(level=logging.DEBUG)
 
 def byLine_enditem_insert(inputSTR):
     if re.search(r'\(By',inputSTR) == None:
-        inputSTR += '\n\n(By Name1)'
+        inputSTR += '\n\n(By Name1)\n'
 
     if re.search(r'Enditem/', inputSTR) == None:
-        inputSTR += '\nEnditem/\n'
+        inputSTR += 'Enditem/\n'
 
     return inputSTR
 
-def reporter_name_insert(inputSTR, reporterLIST=None):
+def reporter_name_insert(inputSTR, reporterLIST=[]):
     # open reporter_names.json
     with open('reporter_names.json', 'r', encoding='utf-8') as reporterFile:
         reporterDICT = json.load(reporterFile)
 
     authorSTR = my_name
 
-    if len(reporterLIST) > 1:
+    if reporterLIST is None or reporterLIST == []:
+        return inputSTR.replace('Name1', authorSTR)
+
+    elif len(reporterLIST) > 1:
         tmpSTR = ''
         for reporter in reporterLIST:
             if reporter != reporterLIST[-1]:
@@ -196,6 +199,8 @@ class BotClient(discord.Client):
 
                 if loki_result and loki_result["name"]:
                     self.mscDICT[message.author.id]["reporterList"] = loki_result["name"]
+                else:
+                    self.mscDICT[message.author.id]["reporterList"] = []
 
                 if self.mscDICT[message.author.id]["reporterList"]:
                     resultSTR = reporter_name_insert(resultSTR, self.mscDICT[message.author.id]["reporterList"])
