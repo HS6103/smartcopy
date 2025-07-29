@@ -9,10 +9,12 @@ from gpt_writer import process_news_story
 import name2WG
 import os
 import re
+from crawler import get_cna_article_text
 from datetime import datetime
 from dotenv import load_dotenv
 from pprint import pprint
 from tw2us import twd2usd
+
 
 from smartcopy_TW.main import askLoki, ARTICUT
 
@@ -176,9 +178,14 @@ class BotClient(discord.Client):
             self.mscDICT[message.author.id]["updatetime"] = datetime.now()
 
             if self.mscDICT[message.author.id]["reporterList"] == [] and self.mscDICT[message.author.id]["latestQuest"] == "":
-                replySTR = "請貼給我英文 news lead！"
                 self.mscDICT[message.author.id]["latestQuest"] = "initial_quest"
-                self.mscDICT[message.author.id]["tmpSTR"] = msgSTR
+                newsCN = get_cna_article_text(msgSTR)
+                if newsCN != "":
+                    self.mscDICT[message.author.id]["tmpSTR"] = newsCN
+                    replySTR = f"已經抓取到新聞內容，請輸入英文 news lead！\n-------\n{newsCN[:50]}..."
+                else:
+                    replySTR = "無法抓取新聞內容，請檢查網址是否正確！"
+                    self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
 
             elif self.mscDICT[message.author.id]["latestQuest"] == "initial_quest":
                 english_lead = msgSTR.strip()
