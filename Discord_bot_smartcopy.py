@@ -9,7 +9,7 @@ from gpt_writer import process_news_story
 import name2WG
 import os
 import re
-from crawler import get_cna_article_text
+# from getnewsarticle import get_cna_article_text
 from datetime import datetime
 from dotenv import load_dotenv
 from pprint import pprint
@@ -179,17 +179,24 @@ class BotClient(discord.Client):
 
             if self.mscDICT[message.author.id]["reporterList"] == [] and self.mscDICT[message.author.id]["latestQuest"] == "":
                 self.mscDICT[message.author.id]["latestQuest"] = "initial_quest"
-                newsCN = get_cna_article_text(msgSTR)
+                newsCN = msgSTR
                 if newsCN != "":
                     self.mscDICT[message.author.id]["tmpSTR"] = newsCN
-                    replySTR = f"已經抓取到新聞內容，請輸入英文 news lead！\n-------\n{newsCN[:50]}..."
+                    replySTR = f"已經抓取到新聞內容，請輸入英文 news lead！"
                 else:
-                    replySTR = "無法抓取新聞內容，請檢查網址是否正確！"
+                    replySTR = "請檢查輸入內容是否正確！"
                     self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
 
             elif self.mscDICT[message.author.id]["latestQuest"] == "initial_quest":
                 english_lead = msgSTR.strip()
                 chinese_article = self.mscDICT[message.author.id]["tmpSTR"]
+
+                loki_result = askLoki(
+                    self.mscDICT[message.author.id]["tmpSTR"],
+                    refDICT={'name': [], 'location': [], 'date': [], 'en_entity': [], 'en_name': []},
+                    splitLIST=["！", "，", "。", "？", "!", ",", "\n", "；", "\u3000", ";", "、"]
+                )
+
                 draft_story = process_news_story(chinese_article, english_lead)
 
                 if not draft_story.startswith(english_lead):
@@ -199,21 +206,16 @@ class BotClient(discord.Client):
                 self.mscDICT[message.author.id]["resultSTR"] = draft_story
 
                 resultSTR = byLine_enditem_insert(draft_story)
-                loki_result = askLoki(
-                    self.mscDICT[message.author.id]["tmpSTR"],
-                    refDICT={"name": [], "location": [], "date": []}
-                )
 
                 if loki_result and loki_result["name"]:
                     self.mscDICT[message.author.id]["reporterList"] = loki_result["name"]
                 else:
                     self.mscDICT[message.author.id]["reporterList"] = []
 
-                if self.mscDICT[message.author.id]["reporterList"]:
-                    resultSTR = reporter_name_insert(resultSTR, self.mscDICT[message.author.id]["reporterList"])
-                    resultSTR = twd2usd(resultSTR)
-                    self.mscDICT[message.author.id]["resultSTR"] = resultSTR
-                    replySTR = resultSTR
+                resultSTR = reporter_name_insert(resultSTR, self.mscDICT[message.author.id]["reporterList"])
+                resultSTR = twd2usd(resultSTR)
+                self.mscDICT[message.author.id]["resultSTR"] = resultSTR
+                replySTR = resultSTR
 
                 self.mscDICT[message.author.id] = self.resetMSCwith(message.author.id)
 
