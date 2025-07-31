@@ -27,9 +27,9 @@ Smartcopy 結合 LLM 生成與符號式 AI 的規則檢查，並整合 Discord c
 2. 在根目錄加入 .env 並寫入：
 
 ```
-    discord_token = 上一步獲得的 bot token
-    my_name = 您的英文名
-    openai_api_key = 您的 OpenAI API key
+discord_token = 上一步獲得的 bot token
+my_name = 您的英文名
+openai_api_key = 您的 OpenAI API key
 ```
 
 3. 在 smartcopy_TW 放入您的卓騰 account.info 檔案
