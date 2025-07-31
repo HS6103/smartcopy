@@ -9,7 +9,7 @@ from gpt_writer import process_news_story
 import name2WG
 import os
 import re
-# from getnewsarticle import get_cna_article_text
+from getnewsarticle import get_cna_article_text
 from datetime import datetime
 from dotenv import load_dotenv
 from pprint import pprint

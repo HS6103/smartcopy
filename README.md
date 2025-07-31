@@ -21,6 +21,21 @@ Smartcopy 結合 LLM 生成與符號式 AI 的規則檢查，並整合 Discord c
 
 ---
 
+## 環境設定
+
+1. 依照[步驟](https://ithelp.ithome.com.tw/articles/10350599)設定 DC bot
+2. 在根目錄加入 .env 並寫入：
+
+```
+    discord_token = 上一步獲得的 bot token
+    my_name = 您的英文名
+    openai_api_key = 您的 OpenAI API key
+```
+
+3. 在 smartcopy_TW 放入您的卓騰 account.info 檔案
+4. 在根目錄使用 `pip install -r requirements. txt` 安裝必要套件
+5. 在根目錄加入 reporter_names.json 並以中文名為 key / 英文名為 value
+
 ## 使用流程
 
 1. 貼上中文原稿  
@@ -28,6 +43,7 @@ Smartcopy 結合 LLM 生成與符號式 AI 的規則檢查，並整合 Discord c
 3. 等待草稿自動生成  
 
 SmartCopy 將自動完成以下作業：  
+
 - 延續英文草稿撰寫
 - 尋找稿中第一個台幣金額並標註當日美金換算
 - 根據記者中文姓名與使用者英文名自動生成 by-line  
