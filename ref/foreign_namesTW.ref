@@ -1,0 +1,30 @@
+{
+    "language": "zh-tw",
+    "type": "advance",
+    "version": {
+        "atk": "v279",
+        "intent": "1.0"
+    },
+    "user_defined": {
+        "_asNoun": [
+            "中央社"
+        ],
+        "_asSymbol": [
+            "「",
+            "」",
+            "（",
+            "）"
+        ]
+    },
+    "utterance": {
+        "祁凱立（Kharis Templeman）": {
+            "id": "954cf452-466a-4afe-87c1-f50310c1832d",
+            "pos": "<ENTITY_person>祁凱立</ENTITY_person><UserDefined>（</UserDefined><ENTITY_oov>Kharis</ENTITY_oov><ENTITY_oov>Templeman</ENTITY_oov><UserDefined>）</UserDefined>",
+            "lexy": {},
+            "pattern": "<ENTITY_person>([^<]+)</ENTITY_person><UserDefined>（</UserDefined>(.+?)<UserDefined>）</UserDefined>"
+        }
+    },
+    "alias": {},
+    "prompt": {},
+    "document": []
+}

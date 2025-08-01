@@ -1,0 +1,30 @@
+{
+    "language": "zh-tw",
+    "type": "advance",
+    "version": {
+        "atk": "v279",
+        "intent": "1.0"
+    },
+    "user_defined": {
+        "_asNoun": [
+            "中央社"
+        ],
+        "_asSymbol": [
+            "「",
+            "」",
+            "（",
+            "）"
+        ]
+    },
+    "utterance": {
+        "「虔誠軍」（Lashkar-e-Taiba, LET）": {
+            "id": "c7a41d37-3145-4ef4-86ba-ca2018b2b1d7",
+            "pos": "<UserDefined>「</UserDefined><ENTITY_nouny>虔誠軍</ENTITY_nouny><UserDefined>」</UserDefined><UserDefined>（</UserDefined><ENTITY_oov>Lashkar-e-Taiba</ENTITY_oov><ENTITY_oov> LET</ENTITY_oov><UserDefined>）</UserDefined>",
+            "lexy": {},
+            "pattern": "<UserDefined>「</UserDefined>([^」]+?)<UserDefined>」</UserDefined>(?=<UserDefined>（</UserDefined>)(.+?)<UserDefined>）</UserDefined>"
+        }
+    },
+    "alias": {},
+    "prompt": {},
+    "document": []
+}
