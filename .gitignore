@@ -181,6 +181,8 @@ bot_command_linux.txt
 backup.json
 test*
 
-# confidential files
+# Information
 Reporter Names.txt
 reporter_names.json
+village_converted.json
+village.txt
