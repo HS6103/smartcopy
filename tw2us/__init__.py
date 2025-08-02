@@ -88,6 +88,7 @@ def _remove_extra_usd(inputSTR):
 
         # Remove subsequent matches from the remaining string
         remaining_cleaned = re.sub(pattern, ' ', remaining)
+        remaining_cleaned = re.sub(r'(?<=\d)\s+(?=\W)', '', remaining_cleaned)  # Clean up extra spaces
         result += remaining_cleaned
         return result
     else:
