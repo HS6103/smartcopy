@@ -40,6 +40,7 @@ def twd2usd(inputSTR):
 
         usdSTR = "{:,}".format(usd_value)
         inputSTR = inputSTR.replace(f'{twdSTR}', f'{twdSTR} (US${usdSTR}) ', 1)
+        inputSTR = _remove_extra_usd(inputSTR)
 
     return inputSTR
 
@@ -66,3 +67,28 @@ def _get_usd_rate():
 
     except Exception as e:
         print(f"An error occurred while fetching the USD rates: {e}")
+
+def _remove_extra_usd(inputSTR):
+    """
+    Remove all but the first '(US$xxx)' annotation followed by optional unit terms.
+    """
+    # Pattern: Match (US$xxx) with optional unit (cents, million, billion, trillion)
+    pattern = r'\s\(US\$[0-9\.,]+\)(?: (cents|million|billion|trillion))?'
+
+    # Find all matches
+    matches = list(re.finditer(pattern, inputSTR))
+
+    # If more than one match, remove all but the first
+    if len(matches) > 1:
+        # Keep the first one
+        first_match_end = matches[0].end()
+        # Reconstruct string excluding other matches
+        result = inputSTR[:first_match_end]
+        remaining = inputSTR[first_match_end:]
+
+        # Remove subsequent matches from the remaining string
+        remaining_cleaned = re.sub(pattern, '', remaining)
+        result += remaining_cleaned
+        return result
+    else:
+        return inputSTR
