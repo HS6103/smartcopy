@@ -73,7 +73,7 @@ def _remove_extra_usd(inputSTR):
     Remove all but the first '(US$xxx)' annotation followed by optional unit terms.
     """
     # Pattern: Match (US$xxx) with optional unit (cents, million, billion, trillion)
-    pattern = r'\s\(US\$[0-9\.,]+\)(?: (cents|million|billion|trillion))?'
+    pattern = r'\s?\(US\$[0-9\.,]+\)(?: (cents|million|billion|trillion))?\s?'
 
     # Find all matches
     matches = list(re.finditer(pattern, inputSTR))
@@ -87,7 +87,7 @@ def _remove_extra_usd(inputSTR):
         remaining = inputSTR[first_match_end:]
 
         # Remove subsequent matches from the remaining string
-        remaining_cleaned = re.sub(pattern, '', remaining)
+        remaining_cleaned = re.sub(pattern, ' ', remaining)
         result += remaining_cleaned
         return result
     else:
