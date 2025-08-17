@@ -26,7 +26,7 @@ def _summarize_to_ap_style(original_text, lead, dictionary={}, word_limit=300):
     """Summarizes text to AP style news story with given lead and word limit."""
     prompt = (
         f"{original_text}\n\n"
-        f"Task: based on above report, finish the story after the given English lead and follow the given translations, Constraint: [AP style, reverse pyramid structure], Word limit: {word_limit}, English lead:\n\n{lead}, translations: {dictionary} "
+        f"Task: based on above report, translate the story after the given English lead and follow the given translations, Constraint: [AP style, reverse pyramid structure], Word limit: {word_limit}, English lead:\n\n{lead}, translations: {dictionary} "
     )
     response = client.chat.completions.create(
         model="gpt-4",
