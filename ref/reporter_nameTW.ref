@@ -1,0 +1,30 @@
+{
+    "language": "zh-tw",
+    "type": "advance",
+    "version": {
+        "atk": "v279",
+        "intent": "1.0"
+    },
+    "user_defined": {
+        "_asNoun": [
+            "中央社"
+        ],
+        "_asSymbol": [
+            "「",
+            "」",
+            "（",
+            "）"
+        ]
+    },
+    "utterance": {
+        "中央社記者謝幸恩台北25日電": {
+            "id": "e8c4b4c4-ac25-4957-a6db-02ab8ad6638d",
+            "pos": "<UserDefined>中央社</UserDefined><ENTITY_noun>記者</ENTITY_noun><ENTITY_person>謝幸恩</ENTITY_person><LOCATION>台北</LOCATION><TIME_day>25日</TIME_day><ENTITY_oov>電</ENTITY_oov>",
+            "lexy": {},
+            "pattern": "<UserDefined>中央社</UserDefined><ENTITY_noun>記者</ENTITY_noun>(.+?)<LOCATION>([^<]+)</LOCATION><TIME_day>([^<]+)</TIME_day>{1,10}"
+        }
+    },
+    "alias": {},
+    "prompt": {},
+    "document": []
+}
