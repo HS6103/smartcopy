@@ -120,7 +120,7 @@ class BotClient(discord.Client):
                 if len(para) + 2 > MAX_LENGTH:
                     # Break oversized paragraph into safe chunks
                     for i in range(0, len(para), MAX_LENGTH):
-                        parts.append(para[i:i+MAX_LENGTH].strip())
+                        parts.append(para[i:i+MAX_LENGTH].strip()+"\n\n")
                     current = ""
                 else:
                     current = para + "\n\n"

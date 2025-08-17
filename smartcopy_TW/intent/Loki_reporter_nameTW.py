@@ -18,6 +18,7 @@
 
 from importlib.util import module_from_spec
 from importlib.util import spec_from_file_location
+import logging
 from random import sample
 import json
 import os
@@ -96,10 +97,11 @@ def getResult(inputSTR, utterance, args, resultDICT, refDICT, pattern="", toolki
                 resultDICT["response"] = replySTR
                 resultDICT["source"] = "reply"
         else:
-            resultDICT["name"] = (re.findall(r"<ENTITY_person>([^<]+)</ENTITY_person>", args[0]))
-            resultDICT["location"].append(args[1])
-            resultDICT["date"].append(args[2])
-
+            udfLIST = re.findall(r"<UserDefined>([^<]+)</UserDefined>", args[0])
+            for udf in udfLIST:
+                if udf in USER_DEFINED_DICT["_asName"]:
+                    resultDICT["name"].append(udf)
+        logging.debug("Reporter Names => {}".format(resultDICT["name"]))
     return resultDICT
 
 
