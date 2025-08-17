@@ -1,3 +1,4 @@
+import logging
 import requests
 import re
 from bs4 import BeautifulSoup
@@ -13,7 +14,7 @@ def twd2usd(inputSTR):
     search_result = re.search(r'((NT\$[0-9\.,]+) (cents|million|billion|trillion){0,1})', inputSTR)
 
     if search_result is None:
-        print("**No TWD amount found in the input string.**\n")
+        logging.debug("**No TWD amount found in the input string.**\n")
         return inputSTR
     else:
         twdSTR = search_result.groups(0)[0]

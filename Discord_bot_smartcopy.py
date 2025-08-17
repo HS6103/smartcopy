@@ -181,6 +181,8 @@ class BotClient(discord.Client):
                 self.mscDICT[message.author.id]["latestQuest"] = "initial_quest"
                 newsCN = msgSTR
                 if newsCN != "":
+                    if newsCN.startswith("https://www.cna.com.tw/news/"):
+                        newsCN = get_cna_article_text(newsCN)
                     self.mscDICT[message.author.id]["tmpSTR"] = newsCN
                     replySTR = f"已經抓取到新聞內容，請輸入英文 news lead！"
                 else:
