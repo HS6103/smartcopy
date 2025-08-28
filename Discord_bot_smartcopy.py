@@ -182,7 +182,11 @@ class BotClient(discord.Client):
                 newsCN = msgSTR
                 if newsCN != "":
                     if newsCN.startswith("https://www.cna.com.tw/news/"):
-                        newsCN = get_cna_article_text(newsCN)
+                        newsLIST = newsCN.split(" ")
+                        newsCN = ""
+                        for newsLink in newsLIST:
+                            newsCN += get_cna_article_text(newsLink)
+                            newsCN += "\n\n"
                     self.mscDICT[message.author.id]["tmpSTR"] = newsCN
                     replySTR = f"已經抓取到新聞內容，請輸入英文 news lead！"
                 else:
