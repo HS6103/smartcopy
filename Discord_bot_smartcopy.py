@@ -200,7 +200,7 @@ class BotClient(discord.Client):
                 loki_result = askLoki(
                     self.mscDICT[message.author.id]["tmpSTR"],
                     refDICT={'name': [], 'location': [], 'date': [], 'en_entity': [], 'en_name': []},
-                    splitLIST=["！", "，", "。", "？", "!", ",", "\n", "；", "\u3000", ";", "、"]
+                    splitLIST=["！", "，", "。", "？", "!", ",", "\n", "；", "\u3000", ";"]
                 )
 
                 draft_story = process_news_story(chinese_article, english_lead)

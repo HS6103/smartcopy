@@ -6,7 +6,27 @@
         "intent": "1.0"
     },
     "user_defined": {
-        "_asName": [
+        "_asNoun": [
+            "中國文化大學",
+            "中國醫藥大學",
+            "中央社",
+            "國台辦",
+            "外長",
+            "桃園",
+            "發言人",
+            "選手"
+        ],
+        "_asTime": [
+            "日後"
+        ],
+        "_asAgent": [],
+        "_asSymbol": [
+            "「",
+            "」",
+            "（",
+            "）"
+        ],
+        "_asReporter": [
             "何宏儒",
             "何秀玲",
             "余曉涵",
@@ -129,6 +149,8 @@
             "陳婕翎",
             "陳家倫",
             "陳容琛",
+            "陳彥婷",
+            "陳彥婷 ",
             "陳怡璇",
             "陳惠珍",
             "陳政偉",
@@ -151,24 +173,14 @@
             "黃麗芸",
             "黎建忠",
             "龍柏安"
-        ],
-        "_asNoun": [
-            "中央社",
-            "桃園"
-        ],
-        "_asSymbol": [
-            "「",
-            "」",
-            "（",
-            "）"
         ]
     },
     "utterance": {
-        "中央社記者謝幸恩台北25日電": {
-            "id": "e8c4b4c4-ac25-4957-a6db-02ab8ad6638d",
-            "pos": "<UserDefined>中央社</UserDefined><ENTITY_noun>記者</ENTITY_noun><UserDefined>謝幸恩</UserDefined><LOCATION>台北</LOCATION><TIME_day>25日</TIME_day><ENTITY_oov>電</ENTITY_oov>",
+        "（中央社記者謝幸恩台北25日電）": {
+            "id": "f3715254-2e45-424f-b52c-96eb8d74cde6",
+            "pos": "<UserDefined>（</UserDefined><UserDefined>中央社</UserDefined><ENTITY_noun>記者</ENTITY_noun><UserDefined>謝幸恩</UserDefined><LOCATION>台北</LOCATION><TIME_day>25日</TIME_day><ENTITY_oov>電</ENTITY_oov><UserDefined>）</UserDefined>",
             "lexy": {},
-            "pattern": "<UserDefined>中央社</UserDefined><ENTITY_noun>記者</ENTITY_noun>(.+)?"
+            "pattern": "<UserDefined>中央社</UserDefined><ENTITY_noun>記者</ENTITY_noun>(.+)?<UserDefined>）</UserDefined>"
         }
     },
     "alias": {},

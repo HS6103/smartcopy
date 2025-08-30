@@ -90,16 +90,17 @@ def getReply(utterance, args):
 
 def getResult(inputSTR, utterance, args, resultDICT, refDICT, pattern="", toolkitDICT={}):
     debugInfo(inputSTR, utterance)
-    if utterance == "中央社記者謝幸恩台北25日電":
+    if utterance == "（中央社記者謝幸恩台北25日電）":
         if CHATBOT:
             replySTR = getReply(utterance, args)
             if replySTR:
                 resultDICT["response"] = replySTR
                 resultDICT["source"] = "reply"
         else:
+            print("hit")
             udfLIST = re.findall(r"<UserDefined>([^<]+)</UserDefined>", args[0])
             for udf in udfLIST:
-                if udf in USER_DEFINED_DICT["_asName"]:
+                if udf in USER_DEFINED_DICT["_asReporter"]:
                     resultDICT["name"].append(udf)
         logging.debug("Reporter Names => {}".format(resultDICT["name"]))
     return resultDICT
@@ -108,5 +109,5 @@ def getResult(inputSTR, utterance, args, resultDICT, refDICT, pattern="", toolki
 if __name__ == "__main__":
     from pprint import pprint
 
-    resultDICT = getResult("中央社記者謝幸恩台北25日電", "中央社記者謝幸恩台北25日電", [], {}, {})
+    resultDICT = getResult("中央社記者葉臻、張榮祥桃園28日電", "中央社記者謝幸恩台北25日電", [], {}, {})
     pprint(resultDICT)
